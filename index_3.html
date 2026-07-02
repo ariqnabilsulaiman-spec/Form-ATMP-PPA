@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pengajuan Pelatihan PPA</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#3E4FC7">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F4EE;--card:#FFFFFF;--ink:#1E2130;--ink-soft:#5B5D6B;--line:#E4E1D6;
+    --indigo:#3E4FC7;--amber:#B4790A;--amber-tint:#FBF0DA;--green:#2E7D4F;--green-tint:#E4F3E9;
+    --red:#B23A3A;--red-tint:#F8E7E5;--radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Plus Jakarta Sans', sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:env(safe-area-inset-bottom);}
+  .wrap{max-width:920px;margin:0 auto;padding:24px 16px 80px;}
+  header.top{border-bottom:2px solid var(--ink);padding-bottom:16px;margin-bottom:20px;}
+  header.top .eyebrow{font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px;}
+  header.top h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-0.01em;}
+  .role-switch{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;margin-top:14px;overflow-x:auto;}
+  .role-switch button{border:none;background:transparent;padding:9px 14px;border-radius:999px;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;white-space:nowrap;flex:1;}
+  .role-switch button.active{background:var(--ink);color:#fff;}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:20px;}
+  .panel h2{font-size:16px;margin:0 0 4px;font-weight:700;}
+  .panel .sub{font-size:13px;color:var(--ink-soft);margin:0 0 18px;}
+  label{display:block;font-size:13px;font-weight:600;margin:14px 0 6px;}
+  input, textarea, select{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;color:var(--ink);background:#FCFBF8;}
+  input:focus, textarea:focus, select:focus{outline:2px solid var(--indigo);outline-offset:1px;border-color:var(--indigo);}
+  textarea{resize:vertical;min-height:60px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;}
+  @media (max-width:560px){.grid2{grid-template-columns:1fr;}}
+  .btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:8px;padding:11px 20px;border:1px solid transparent;cursor:pointer;transition:opacity .15s;}
+  .btn:hover{opacity:0.88;}
+  .btn-primary{background:var(--indigo);color:#fff;margin-top:20px;width:100%;}
+  .btn-secondary{background:var(--indigo);color:#fff;width:100%;margin-top:12px;}
+  .btn-approve{background:var(--green);color:#fff;}
+  .btn-reject{background:var(--red);color:#fff;}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);font-size:12px;padding:6px 12px;}
+  .actions{display:flex;gap:10px;margin-top:16px;}
+  .stepper{display:flex;align-items:center;margin:16px 0 4px;}
+  .step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
+  .step .dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono', monospace;font-size:11px;font-weight:500;background:var(--line);color:var(--ink-soft);border:1px solid var(--line);z-index:1;}
+  .step .lbl{font-size:10.5px;color:var(--ink-soft);margin-top:6px;text-align:center;max-width:90px;}
+  .step .connector{position:absolute;top:13px;left:50%;width:100%;height:2px;background:var(--line);z-index:0;}
+  .step:last-child .connector{display:none;}
+  .step.done .dot{background:var(--green);border-color:var(--green);color:#fff;}
+  .step.done .connector{background:var(--green);}
+  .step.current .dot{background:var(--indigo);border-color:var(--indigo);color:#fff;}
+  .step.rejected .dot{background:var(--red);border-color:var(--red);color:#fff;}
+  .step.rejected .lbl, .step.current .lbl{color:var(--ink);font-weight:600;}
+  .card{border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px;background:var(--card);}
+  .card .rowtop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  .card h3{margin:0;font-size:15px;font-weight:700;}
+  .card .meta{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .badge{font-family:'IBM Plex Mono', monospace;font-size:11px;font-weight:500;letter-spacing:0.02em;padding:4px 10px;border-radius:999px;white-space:nowrap;}
+  .badge.pending-user{background:var(--amber-tint);color:var(--amber);}
+  .badge.pending-dept{background:var(--amber-tint);color:var(--amber);}
+  .badge.approved{background:var(--green-tint);color:var(--green);}
+  .badge.rejected{background:var(--red-tint);color:var(--red);}
+  .detail{font-size:13px;color:var(--ink-soft);margin-top:10px;line-height:1.6;}
+  .note{font-size:12px;color:var(--ink-soft);font-style:italic;margin-top:10px;}
+  .empty{font-size:13px;color:var(--ink-soft);padding:20px 0;text-align:center;}
+  .remark-box{margin-top:12px;}
+  .sigpad-wrap{border:1px dashed var(--line);border-radius:8px;padding:8px;background:#FCFBF8;}
+  .sigpad-wrap canvas{width:100%;height:110px;touch-action:none;border-radius:6px;background:#fff;display:block;cursor:crosshair;}
+  .sigpad-actions{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
+  .sigpad-hint{font-size:11px;color:var(--ink-soft);}
+  .sig-block{margin-top:14px;}
+  .sig-line{display:flex;align-items:flex-end;gap:14px;margin-top:10px;flex-wrap:wrap;}
+  .sig-thumb{border:1px solid var(--line);border-radius:8px;background:#fff;padding:4px;}
+  .sig-thumb img{display:block;height:52px;}
+  .sig-meta{font-size:12px;color:var(--ink-soft);}
+  .sig-meta b{color:var(--ink);font-weight:600;}
+  .disclaimer{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--ink-soft);line-height:1.5;background:#FCFBF8;border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:16px;}
+  .disclaimer input{width:auto;margin-top:2px;flex-shrink:0;}
+  .progress-wrap{margin-bottom:20px;}
+  .progress-track{width:100%;height:10px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:8px;}
+  .progress-fill{height:100%;background:var(--indigo);border-radius:999px;transition:width .3s;}
+  .progress-fill.done{background:var(--green);}
+  .progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-top:6px;}
+  .materi-box{margin-top:14px;border-top:1px dashed var(--line);padding-top:14px;}
+  .materi-box .filelink{font-size:13px;color:var(--indigo);font-weight:600;text-decoration:none;}
+  .filerow{display:flex;flex-direction:column;gap:4px;margin-top:10px;}
+  #loginGate{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;padding:20px;}
+  #loginGate .box{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:28px;width:100%;max-width:340px;text-align:left;}
+  #loginGate h1{font-size:18px;margin:14px 0 4px;text-align:center;}
+  #loginGate p.hint{font-size:12px;color:var(--ink-soft);text-align:center;margin:0 0 18px;}
+  #loginError{color:var(--red);font-size:12px;margin-top:10px;display:none;}
+  .userbar{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink-soft);margin-top:10px;flex-wrap:wrap;gap:6px;}
+  .logout{background:none;border:none;color:var(--indigo);font-size:12px;font-weight:600;cursor:pointer;padding:0;}
+</style>
+</head>
+<body>
+
+<div id="loginGate" class="wrap">
+  <div class="box">
+    <div class="eyebrow" style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-soft);text-align:center;">PPA · Sistem pengajuan pelatihan</div>
+    <h1>Masuk ke aplikasi</h1>
+    <p class="hint">Gunakan username &amp; password yang diberikan oleh HCD.</p>
+    <label>Username</label>
+    <input id="loginUsername" placeholder="username">
+    <label>Password</label>
+    <input id="loginPassword" type="password" placeholder="password">
+    <button class="btn btn-primary" onclick="doLogin()">Masuk</button>
+    <p id="loginError"></p>
+  </div>
+</div>
+
+<div class="wrap" id="appShell" style="display:none">
+
+  <header class="top">
+    <div class="eyebrow">PPA · Sistem pengajuan pelatihan</div>
+    <h1>Pengajuan pelatihan otomatis</h1>
+    <div class="userbar">
+      <span id="syncStatus">Memuat data…</span>
+      <span>Halo, <b id="userNamaLabel"></b> · <button class="logout" onclick="doLogout()">Keluar</button></span>
+    </div>
+    <div class="role-switch" id="roleSwitch">
+      <button data-role="kandidat" class="active">Peserta</button>
+      <button data-role="user">User (Atasan)</button>
+      <button data-role="depthead" id="tabDepthead" style="display:none">Dept. Head (HCD)</button>
+    </div>
+  </header>
+
+  <!-- KANDIDAT VIEW -->
+  <div id="view-kandidat">
+    <div class="panel progress-wrap">
+      <h2>Jam belajar tahun ini</h2>
+      <p class="sub">Target minimal 45 jam pelatihan per tahun, dihitung dari pengajuan yang sudah disetujui penuh.</p>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-label"><span id="progressText">0 / 45 jam</span><span id="progressPercent">0%</span></div>
+    </div>
+
+    <div class="panel">
+      <h2>Ajukan pelatihan baru</h2>
+      <p class="sub">Form ini otomatis dikirim ke atasan langsung Anda, lalu ke Departemen Head HCD.</p>
+      <div class="grid2">
+        <div><label>Departemen</label><input id="f_departemen" placeholder="Contoh: Finance"></div>
+        <div><label>Kategori pelatihan</label>
+          <select id="f_kategori">
+            <option value="Internal">Internal</option>
+            <option value="Eksternal">Eksternal</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div><label>Nama pelatihan</label><input id="f_pelatihan" placeholder="Contoh: Advanced Excel"></div>
+        <div><label>Penyelenggara / Trainer</label><input id="f_penyelenggara" placeholder="Contoh: PPM Manajemen"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Tempat pelaksanaan</label><input id="f_tempat" placeholder="Contoh: In Class Training di PPM Manajemen"></div>
+        <div><label>Estimasi biaya (Rp)</label><input id="f_biaya" type="number" placeholder="0"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Tanggal mulai</label><input id="f_mulai" type="date"></div>
+        <div><label>Tanggal selesai</label><input id="f_selesai" type="date"></div>
+      </div>
+      <label>Lama pembelajaran (jam)</label>
+      <input id="f_lamajam" type="number" min="0" step="0.5" placeholder="Contoh: 8">
+      <label>Alasan / manfaat pelatihan</label>
+      <textarea id="f_alasan" placeholder="Jelaskan relevansi pelatihan dengan pekerjaan saat ini"></textarea>
+      <label>Rencana implementasi dalam proyek nyata</label>
+      <textarea id="f_rencanaProyek" placeholder="Jelaskan proyek nyata di tempat kerja yang akan menjadi wadah penerapan hasil pelatihan ini"></textarea>
+
+      <div class="disclaimer">
+        <input type="checkbox" id="f_disclaimer">
+        <span>Dengan menandatangani ini, saya bersedia mengumpulkan materi pembelajaran dan menerapkan ilmu yang didapat dalam bentuk proyek nyata sebagaimana dijelaskan di atas, sebagai bagian dari pemenuhan pelatihan ini.</span>
+      </div>
+
+      <div class="sig-block">
+        <label>Tanda tangan pemohon</label>
+        <div class="sigpad-wrap">
+          <canvas id="sig_kandidat_form"></canvas>
+          <div class="sigpad-actions">
+            <span class="sigpad-hint">Tanda tangan dengan jari / mouse</span>
+            <button type="button" class="btn btn-ghost" onclick="clearSignature('sig_kandidat_form')">Hapus</button>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="submitBtn" onclick="submitForm()">Kirim pengajuan</button>
+    </div>
+
+    <div class="panel">
+      <h2>Status pengajuan saya</h2>
+      <p class="sub">Hanya pengajuan atas nama Anda yang tampil di sini.</p>
+      <div id="kandidatList"></div>
+    </div>
+  </div>
+
+  <!-- USER VIEW -->
+  <div id="view-user" style="display:none">
+    <div class="panel">
+      <h2>Approval — User (Atasan Langsung)</h2>
+      <p class="sub">Hanya menampilkan pengajuan dari karyawan yang akun mereka terhubung ke Anda sebagai atasan.</p>
+      <div id="userList" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- DEPT HEAD VIEW -->
+  <div id="view-depthead" style="display:none">
+    <div class="panel">
+      <h2>Approval — Departemen Head (HCD)</h2>
+      <p class="sub">Menampilkan semua pengajuan lintas departemen yang sudah disetujui User.</p>
+      <div id="deptList" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SHEETS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3UlBldeyNsK3mbRfmN9dFcsfN_wKqeI_e3tY9v5TLbwB4S0P5m3T_AJBnt-nmRpjr/exec';
+const TARGET_JAM_PER_TAHUN = 45;
+
+let token = null;
+let currentNama = '';
+let currentJabatan = '';
+let currentRole = '';
+let isHCDUser = false;
+let myApplications = [];
+let myApprovalsAsUser = [];
+let hcdApprovals = [];
+let activeTab = 'kandidat';
+const sigState = {};
+
+function setLoginError(msg){
+  const el = document.getElementById('loginError');
+  el.textContent = msg; el.style.display = msg ? 'block' : 'none';
+}
+
+async function doLogin(){
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if(!username || !password){ setLoginError('Isi username dan password.'); return; }
+  setLoginError('');
+  try{
+    const res = await fetch(SHEETS_WEB_APP_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({action:'login', username, password})
+    });
+    const json = await res.json();
+    if(json.error){ setLoginError(json.error); return; }
+    token = json.token; currentNama = json.nama; currentRole = json.role; currentJabatan = json.jabatan || '';
+    localStorage.setItem('ppa_token', token);
+    localStorage.setItem('ppa_nama', currentNama);
+    localStorage.setItem('ppa_jabatan', currentJabatan);
+    enterApp();
+  }catch(err){ setLoginError('Gagal terhubung ke server.'); }
+}
+
+function doLogout(){
+  localStorage.removeItem('ppa_token');
+  localStorage.removeItem('ppa_nama');
+  token = null;
+  document.getElementById('appShell').style.display = 'none';
+  document.getElementById('loginGate').style.display = 'flex';
+  document.getElementById('loginPassword').value = '';
+}
+
+function enterApp(){
+  document.getElementById('loginGate').style.display = 'none';
+  document.getElementById('appShell').style.display = 'block';
+  document.getElementById('userNamaLabel').textContent = currentNama;
+  boot();
+}
+
+window.addEventListener('load', ()=>{
+  const saved = localStorage.getItem('ppa_token');
+  const savedNama = localStorage.getItem('ppa_nama');
+  const savedJabatan = localStorage.getItem('ppa_jabatan');
+  if(saved){ token = saved; currentNama = savedNama || ''; currentJabatan = savedJabatan || ''; enterApp(); }
+});
+
+const roleSwitch = document.getElementById('roleSwitch');
+roleSwitch.addEventListener('click', (e)=>{
+  if(e.target.tagName !== 'BUTTON') return;
+  activeTab = e.target.dataset.role;
+  [...roleSwitch.children].forEach(b=>b.classList.toggle('active', b===e.target));
+  ['kandidat','user','depthead'].forEach(r=>{
+    document.getElementById('view-'+r).style.display = (r===activeTab) ? 'block':'none';
+  });
+});
+
+function initSignaturePad(canvasId){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width || 300;
+  const h = rect.height || 110;
+  canvas.width = w * 2; canvas.height = h * 2;
+  ctx.scale(2,2); ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#1E2130';
+  sigState[canvasId] = {drawing:false, hasSignature:false};
+  function pos(e){
+    const r = canvas.getBoundingClientRect();
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+    return {x:cx, y:cy};
+  }
+  function start(e){ e.preventDefault(); sigState[canvasId].drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+  function move(e){ if(!sigState[canvasId].drawing) return; e.preventDefault(); const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); sigState[canvasId].hasSignature = true; }
+  function end(){ if(sigState[canvasId]) sigState[canvasId].drawing = false; }
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+}
+function clearSignature(canvasId){
+  const canvas = document.getElementById(canvasId); if(!canvas) return;
+  const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width, canvas.height);
+  if(sigState[canvasId]) sigState[canvasId].hasSignature = false;
+}
+function hasSignature(canvasId){ return !!(sigState[canvasId] && sigState[canvasId].hasSignature); }
+function getSignatureDataURL(canvasId){ return document.getElementById(canvasId).toDataURL('image/png'); }
+function setSyncStatus(text){ const el = document.getElementById('syncStatus'); if(el) el.textContent = text; }
+
+function readFileAsBase64(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadFile(filename, mimeType, base64Data){
+  const res = await fetch(SHEETS_WEB_APP_URL, {
+    method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({token, action:'uploadFile', filename, mimeType, base64Data})
+  });
+  const json = await res.json();
+  if(json.error) throw new Error(json.error);
+  return json;
+}
+
+async function loadData(){
+  try{
+    const res = await fetch(SHEETS_WEB_APP_URL + '?token=' + encodeURIComponent(token));
+    const json = await res.json();
+    if(json.error === 'unauthorized'){ doLogout(); return; }
+    if(json.error){ setSyncStatus('Gagal: ' + json.error); return; }
+    isHCDUser = !!json.isHCD;
+    myApplications = json.myApplications || [];
+    myApprovalsAsUser = json.myApprovalsAsUser || [];
+    hcdApprovals = json.hcdApprovals || [];
+    document.getElementById('tabDepthead').style.display = isHCDUser ? '' : 'none';
+    setSyncStatus('Tersinkron · ' + new Date().toLocaleTimeString('id-ID'));
+  }catch(err){
+    setSyncStatus('Gagal memuat data dari server');
+  }
+}
+
+async function postAction(payload){
+  try{
+    const res = await fetch(SHEETS_WEB_APP_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(Object.assign({token}, payload))
+    });
+    const json = await res.json();
+    if(json.error === 'unauthorized'){ doLogout(); return false; }
+    if(json.error){ alert('Ditolak server: ' + json.error); return false; }
+    return true;
+  }catch(err){
+    alert('Gagal menghubungi server.'); return false;
+  }
+}
+
+async function submitForm(){
+  const departemen = document.getElementById('f_departemen').value.trim();
+  const kategoriPelatihan = document.getElementById('f_kategori').value;
+  const pelatihan = document.getElementById('f_pelatihan').value.trim();
+  const penyelenggara = document.getElementById('f_penyelenggara').value.trim();
+  const tempat = document.getElementById('f_tempat').value.trim();
+  const mulai = document.getElementById('f_mulai').value;
+  const selesai = document.getElementById('f_selesai').value;
+  const biaya = document.getElementById('f_biaya').value;
+  const lamaJam = document.getElementById('f_lamajam').value;
+  const alasan = document.getElementById('f_alasan').value.trim();
+  const rencanaProyek = document.getElementById('f_rencanaProyek').value.trim();
+  const disclaimerChecked = document.getElementById('f_disclaimer').checked;
+
+  if(!departemen || !pelatihan || !tempat || !mulai || !selesai || !lamaJam || !rencanaProyek){
+    alert('Mohon lengkapi field wajib, termasuk rencana implementasi dalam proyek nyata.'); return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  const mulaiDate = new Date(mulai);
+  const selesaiDate = new Date(selesai);
+  if(mulaiDate < today){ alert('Tanggal mulai tidak boleh sebelum hari ini.'); return; }
+  if(selesaiDate < mulaiDate){ alert('Tanggal selesai tidak boleh sebelum tanggal mulai.'); return; }
+  if(!disclaimerChecked){ alert('Anda harus menyetujui pernyataan kesediaan sebelum menandatangani.'); return; }
+  if(!hasSignature('sig_kandidat_form')){ alert('Permohonan harus ditandatangani sebelum dikirim.'); return; }
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true; submitBtn.textContent = 'Mengirim...';
+
+  try{
+    const sigUpload = await uploadFile('ttd_kandidat_' + Date.now() + '.png', 'image/png', getSignatureDataURL('sig_kandidat_form'));
+
+    const newSub = {
+      id: Date.now(), nama: currentNama, jabatan: currentJabatan, departemen, kategoriPelatihan,
+      pelatihan, penyelenggara, tempat, mulai, selesai, biaya,
+      lamaJam, alasan, rencanaProyek, disclaimerAccepted: 'ya',
+      status: 'pending_user', signatureKandidat: sigUpload.directUrl,
+      submittedAt: new Date().toLocaleString('id-ID'),
+      catatanUser:'', approverUser:'', signatureUser:'', decidedAtUser:'',
+      catatanDept:'', approverDept:'', signatureDept:'', decidedAtDept:'',
+      materiFileUrl:'', buktiProyekFileUrl:'', materiUploadedAt:''
+    };
+
+    const ok = await postAction({action:'create', data:newSub});
+    if(!ok) return;
+
+    ['f_departemen','f_pelatihan','f_penyelenggara','f_tempat','f_mulai','f_selesai','f_biaya','f_lamajam','f_alasan','f_rencanaProyek'].forEach(id=>{
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('f_kategori').value = 'Internal';
+    document.getElementById('f_disclaimer').checked = false;
+    clearSignature('sig_kandidat_form');
+    await loadData();
+    render();
+  }catch(err){
+    alert('Gagal mengunggah tanda tangan: ' + err.message);
+  }finally{
+    submitBtn.disabled = false; submitBtn.textContent = 'Kirim pengajuan';
+  }
+}
+
+async function downloadPdf(id){
+  try{
+    const res = await fetch(SHEETS_WEB_APP_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({token, action:'generatePdf', id})
+    });
+    const json = await res.json();
+    if(json.error === 'unauthorized'){ doLogout(); return; }
+    if(json.error){ alert('Gagal membuat PDF: ' + json.error); return; }
+    const byteChars = atob(json.base64);
+    const byteNumbers = new Array(byteChars.length);
+    for(let i=0;i<byteChars.length;i++){ byteNumbers[i] = byteChars.charCodeAt(i); }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = json.filename || ('pengajuan_' + id + '.docx');
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }catch(err){
+    alert('Gagal mengunduh PDF.');
+  }
+}
+
+function formatRupiah(n){ if(!n) return '-'; return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+
+function stepperHTML(status){
+  const stages = [{label:'Peserta'},{label:'Approval User'},{label:'Dept. Head (HCD)'}];
+  let states;
+  if(status === 'pending_user') states = ['done','current','pending'];
+  else if(status === 'pending_dept') states = ['done','done','current'];
+  else if(status === 'approved') states = ['done','done','done'];
+  else if(status === 'rejected_user') states = ['done','rejected','pending'];
+  else if(status === 'rejected_dept') states = ['done','done','rejected'];
+  return '<div class="stepper">' + stages.map((s,i)=>{
+    const st = states[i];
+    const dotContent = st==='done' ? '&#10003;' : st==='rejected' ? '&#10005;' : (i+1);
+    return `<div class="step ${st==='done'?'done':''} ${st==='current'?'current':''} ${st==='rejected'?'rejected':''}">
+      <div class="connector"></div><div class="dot">${dotContent}</div><div class="lbl">${s.label}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function badgeHTML(status){
+  const map = {
+    pending_user: ['pending-user','Menunggu User'],
+    pending_dept: ['pending-dept','Menunggu Dept. Head (HCD)'],
+    approved: ['approved','Disetujui'],
+    rejected_user: ['rejected','Ditolak (User)'],
+    rejected_dept: ['rejected','Ditolak (Dept. Head HCD)']
+  };
+  const [cls, txt] = map[status];
+  return `<span class="badge ${cls}">${txt}</span>`;
+}
+
+function detailHTML(s){
+  return `<div class="detail">
+    ${s.pelatihan} (${s.kategoriPelatihan || '-'}) — ${s.penyelenggara || 'penyelenggara tidak diisi'}<br>
+    Tempat: ${s.tempat || '-'}<br>
+    Jadwal: ${s.mulai} s/d ${s.selesai} · ${s.lamaJam || 0} jam · Estimasi biaya: ${formatRupiah(s.biaya)}<br>
+    Alasan: ${s.alasan || '-'}<br>
+    Rencana implementasi: ${s.rencanaProyek || '-'}
+  </div>`;
+}
+
+function signaturesHTML(s){
+  let out = '<div class="sig-line">';
+  out += `<div><div class="sig-thumb"><img src="${s.signatureKandidat}" alt="Tanda tangan peserta"></div><div class="sig-meta"><b>${s.nama}</b><br>Pemohon · ${s.submittedAt}</div></div>`;
+  if(s.signatureUser){ out += `<div><div class="sig-thumb"><img src="${s.signatureUser}" alt="Tanda tangan User"></div><div class="sig-meta"><b>${s.approverUser}</b><br>User · ${s.decidedAtUser}</div></div>`; }
+  if(s.signatureDept){ out += `<div><div class="sig-thumb"><img src="${s.signatureDept}" alt="Tanda tangan Dept Head"></div><div class="sig-meta"><b>${s.approverDept}</b><br>Dept. Head (HCD) · ${s.decidedAtDept}</div></div>`; }
+  out += '</div>';
+  return out;
+}
+
+function materiHTML(s){
+  if(s.status !== 'approved') return '';
+  if(s.materiFileUrl){
+    return `<div class="materi-box">
+      <label style="margin:0 0 8px;">Materi &amp; bukti proyek</label>
+      <div class="filerow">
+        <a class="filelink" href="${s.materiFileUrl}" target="_blank" rel="noopener">Lihat materi pembelajaran</a>
+        <a class="filelink" href="${s.buktiProyekFileUrl}" target="_blank" rel="noopener">Lihat bukti pengerjaan proyek</a>
+      </div>
+      <div class="note">Dikumpulkan ${s.materiUploadedAt}</div>
+    </div>`;
+  }
+  return `<div class="materi-box">
+    <label style="margin:0 0 8px;">Kumpulkan materi &amp; bukti proyek</label>
+    <input type="file" id="materi_${s.id}" accept=".pdf,.doc,.docx,.ppt,.pptx,image/*">
+    <label style="margin-top:10px;">Bukti pengerjaan proyek</label>
+    <input type="file" id="bukti_${s.id}" accept=".pdf,.doc,.docx,.ppt,.pptx,image/*">
+    <button class="btn btn-secondary" onclick="submitMateri(${s.id})">Kirim materi &amp; bukti</button>
+  </div>`;
+}
+
+async function submitMateri(id){
+  const materiFile = document.getElementById('materi_'+id).files[0];
+  const buktiFile = document.getElementById('bukti_'+id).files[0];
+  if(!materiFile || !buktiFile){ alert('Unggah kedua file: materi pembelajaran dan bukti pengerjaan proyek.'); return; }
+  if(materiFile.size > 8*1024*1024 || buktiFile.size > 8*1024*1024){ alert('Ukuran tiap file maksimal 8MB.'); return; }
+
+  try{
+    const materiB64 = await readFileAsBase64(materiFile);
+    const buktiB64 = await readFileAsBase64(buktiFile);
+    const materiUp = await uploadFile(materiFile.name, materiFile.type || 'application/octet-stream', materiB64);
+    const buktiUp = await uploadFile(buktiFile.name, buktiFile.type || 'application/octet-stream', buktiB64);
+
+    const ok = await postAction({
+      action:'submitMateri', id,
+      data:{ materiFileUrl: materiUp.url, buktiProyekFileUrl: buktiUp.url, materiUploadedAt: new Date().toLocaleString('id-ID') }
+    });
+    if(!ok) return;
+    await loadData();
+    render();
+  }catch(err){
+    alert('Gagal mengunggah file: ' + err.message);
+  }
+}
+
+function updateProgress(){
+  const now = new Date();
+  const totalJam = myApplications
+    .filter(s => s.status === 'approved' && s.mulai && new Date(s.mulai).getFullYear() === now.getFullYear())
+    .reduce((sum, s) => sum + (Number(s.lamaJam) || 0), 0);
+  const pct = Math.min(100, Math.round((totalJam / TARGET_JAM_PER_TAHUN) * 100));
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressFill').classList.toggle('done', totalJam >= TARGET_JAM_PER_TAHUN);
+  document.getElementById('progressText').textContent = totalJam + ' / ' + TARGET_JAM_PER_TAHUN + ' jam';
+  document.getElementById('progressPercent').textContent = pct + '%';
+}
+
+function render(){ renderKandidat(); renderUser(); renderDept(); updateProgress(); }
+
+function renderKandidat(){
+  const el = document.getElementById('kandidatList');
+  if(myApplications.length === 0){ el.innerHTML = '<div class="empty">Belum ada pengajuan.</div>'; return; }
+  el.innerHTML = myApplications.slice().reverse().map(s=>`
+    <div class="card">
+      <div class="rowtop">
+        <div><h3>${s.pelatihan}</h3><div class="meta">${s.nama}${s.jabatan ? " · " + s.jabatan : ""} · ${s.departemen} · diajukan ${s.submittedAt}</div></div>
+        ${badgeHTML(s.status)}
+      </div>
+      ${stepperHTML(s.status)}
+      ${detailHTML(s)}
+      ${s.catatanUser ? `<div class="note">Catatan User: ${s.catatanUser}</div>` : ''}
+      ${s.catatanDept ? `<div class="note">Catatan Dept. Head (HCD): ${s.catatanDept}</div>` : ''}
+      ${signaturesHTML(s)}
+      ${materiHTML(s)}
+      <button class="btn btn-ghost" style="margin-top:12px;" onclick="downloadPdf(${s.id})">Unduh Word</button>
+    </div>
+  `).join('');
+}
+
+function renderUser(){
+  const el = document.getElementById('userList');
+  if(myApprovalsAsUser.length === 0){ el.innerHTML = '<div class="empty">Tidak ada pengajuan yang menunggu approval Anda.</div>'; return; }
+  el.innerHTML = myApprovalsAsUser.map(s=>`
+    <div class="card">
+      <div class="rowtop">
+        <div><h3>${s.pelatihan}</h3><div class="meta">${s.nama}${s.jabatan ? " · " + s.jabatan : ""} · ${s.departemen} · diajukan ${s.submittedAt}</div></div>
+        ${badgeHTML(s.status)}
+      </div>
+      ${stepperHTML(s.status)}
+      ${detailHTML(s)}
+      <div class="remark-box">
+        <label>Catatan (opsional)</label>
+        <textarea id="remark_user_${s.id}" placeholder="Catatan untuk peserta"></textarea>
+      </div>
+      <div class="sig-block">
+        <label>Tanda tangan approval</label>
+        <div class="sigpad-wrap">
+          <canvas id="sig_user_${s.id}"></canvas>
+          <div class="sigpad-actions">
+            <span class="sigpad-hint">Wajib diisi sebelum menyetujui/menolak</span>
+            <button type="button" class="btn btn-ghost" onclick="clearSignature('sig_user_${s.id}')">Hapus</button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-approve" onclick="decide(${s.id}, 'user', true)">Setujui</button>
+        <button class="btn btn-reject" onclick="decide(${s.id}, 'user', false)">Tolak</button>
+      </div>
+      <button class="btn btn-ghost" style="margin-top:10px;" onclick="downloadPdf(${s.id})">Unduh Word</button>
+    </div>
+  `).join('');
+  myApprovalsAsUser.forEach(s => initSignaturePad('sig_user_'+s.id));
+}
+
+function renderDept(){
+  const el = document.getElementById('deptList');
+  if(hcdApprovals.length === 0){ el.innerHTML = '<div class="empty">Tidak ada pengajuan yang menunggu approval Anda.</div>'; return; }
+  el.innerHTML = hcdApprovals.map(s=>`
+    <div class="card">
+      <div class="rowtop">
+        <div><h3>${s.pelatihan}</h3><div class="meta">${s.nama}${s.jabatan ? " · " + s.jabatan : ""} · ${s.departemen} · diajukan ${s.submittedAt}</div></div>
+        ${badgeHTML(s.status)}
+      </div>
+      ${stepperHTML(s.status)}
+      ${detailHTML(s)}
+      <div class="note">Catatan User: ${s.catatanUser || '-'}</div>
+      <div class="remark-box">
+        <label>Catatan (opsional)</label>
+        <textarea id="remark_dept_${s.id}" placeholder="Catatan untuk peserta"></textarea>
+      </div>
+      <div class="sig-block">
+        <label>Tanda tangan approval</label>
+        <div class="sigpad-wrap">
+          <canvas id="sig_dept_${s.id}"></canvas>
+          <div class="sigpad-actions">
+            <span class="sigpad-hint">Wajib diisi sebelum menyetujui/menolak</span>
+            <button type="button" class="btn btn-ghost" onclick="clearSignature('sig_dept_${s.id}')">Hapus</button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-approve" onclick="decide(${s.id}, 'dept', true)">Setujui</button>
+        <button class="btn btn-reject" onclick="decide(${s.id}, 'dept', false)">Tolak</button>
+      </div>
+      <button class="btn btn-ghost" style="margin-top:10px;" onclick="downloadPdf(${s.id})">Unduh Word</button>
+    </div>
+  `).join('');
+  hcdApprovals.forEach(s => initSignaturePad('sig_dept_'+s.id));
+}
+
+async function decide(id, stage, approve){
+  let patch, notifyType, canvasId;
+  if(stage === 'user'){
+    canvasId = 'sig_user_'+id;
+    if(!hasSignature(canvasId)){ alert('Tanda tangan wajib diisi.'); return; }
+  } else {
+    canvasId = 'sig_dept_'+id;
+    if(!hasSignature(canvasId)){ alert('Tanda tangan wajib diisi.'); return; }
+  }
+
+  try{
+    const sigUpload = await uploadFile('ttd_' + stage + '_' + Date.now() + '.png', 'image/png', getSignatureDataURL(canvasId));
+
+    if(stage === 'user'){
+      patch = {
+        catatanUser: document.getElementById('remark_user_'+id).value.trim(),
+        approverUser: currentNama,
+        signatureUser: sigUpload.directUrl,
+        decidedAtUser: new Date().toLocaleString('id-ID'),
+        status: approve ? 'pending_dept' : 'rejected_user'
+      };
+      notifyType = approve ? 'to_depthead' : 'rejected_by_user';
+    } else {
+      patch = {
+        catatanDept: document.getElementById('remark_dept_'+id).value.trim(),
+        approverDept: currentNama,
+        signatureDept: sigUpload.directUrl,
+        decidedAtDept: new Date().toLocaleString('id-ID'),
+        status: approve ? 'approved' : 'rejected_dept'
+      };
+      notifyType = approve ? 'final_approved' : 'rejected_by_depthead';
+    }
+
+    const ok = await postAction({action:'update', id, data:patch, notifyType});
+    if(!ok) return;
+    await loadData();
+    render();
+  }catch(err){
+    alert('Gagal mengunggah tanda tangan: ' + err.message);
+  }
+}
+
+async function boot(){
+  setSyncStatus('Memuat data…');
+  const todayISO = new Date().toISOString().split('T')[0];
+  document.getElementById('f_mulai').min = todayISO;
+  initSignaturePad('sig_kandidat_form');
+  await loadData();
+  render();
+
+  if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+    navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+  }
+}
+</script>
+</body>
+</html>
