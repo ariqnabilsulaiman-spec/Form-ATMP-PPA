@@ -1,0 +1,339 @@
+const SHEET_NAME = 'Pengajuan';
+const USERS_SHEET = 'Users';
+const DRIVE_FOLDER_NAME = 'Lampiran Pengajuan Pelatihan PPA';
+const HEADERS = ['id','nama','departemen','pelatihan','penyelenggara','mulai','selesai','biaya','alasan','status','signatureKandidat','submittedAt','catatanUser','approverUser','signatureUser','decidedAtUser','catatanDept','approverDept','signatureDept','decidedAtDept','usernameKandidat','usernameAtasan','lamaJam','disclaimerAccepted','materiFileUrl','buktiProyekFileUrl','materiUploadedAt','kategoriPelatihan','tempat','jabatan'];
+const SESSION_TTL_SECONDS = 6 * 60 * 60;
+
+function hashPassword(pw) {
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, pw, Utilities.Charset.UTF_8);
+  return digest.map(b => ((b < 0 ? b + 256 : b).toString(16)).padStart(2, '0')).join('');
+}
+
+function jsonOut(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getUsersMap() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(USERS_SHEET);
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const map = {};
+  data.slice(1).forEach(row => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = row[i]);
+    if (obj.Username) map[String(obj.Username).trim()] = obj;
+  });
+  return map;
+}
+
+function getSession(token) {
+  if (!token) return null;
+  const raw = CacheService.getScriptCache().get('sess_' + token);
+  return raw ? JSON.parse(raw) : null;
+}
+
+function getUploadFolder() {
+  const folders = DriveApp.getFoldersByName(DRIVE_FOLDER_NAME);
+  if (folders.hasNext()) return folders.next();
+  return DriveApp.createFolder(DRIVE_FOLDER_NAME);
+}
+
+function uploadToDrive(filename, mimeType, base64Data) {
+  const clean = base64Data.indexOf(',') >= 0 ? base64Data.split(',')[1] : base64Data;
+  const bytes = Utilities.base64Decode(clean);
+  const blob = Utilities.newBlob(bytes, mimeType, filename);
+  const file = getUploadFolder().createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return {
+    url: file.getUrl(),
+    directUrl: 'https://drive.google.com/uc?export=view&id=' + file.getId()
+  };
+}
+
+function extractDriveId(url) {
+  if (!url) return null;
+  let m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return m[1];
+  m = url.match(/id=([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : null;
+}
+
+function getDriveBlobFromUrl(url) {
+  const id = extractDriveId(url);
+  if (!id) return null;
+  try { return DriveApp.getFileById(id).getBlob(); } catch (err) { return null; }
+}
+
+function findSubmissionById(id) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const data = sheet.getDataRange().getValues();
+  const idCol = HEADERS.indexOf('id');
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][idCol]) === String(id)) {
+      const obj = {};
+      HEADERS.forEach((h, idx) => obj[h] = data[i][idx]);
+      return obj;
+    }
+  }
+  return null;
+}
+
+function formatRupiahPdf(n) {
+  if (!n) return '-';
+  return 'Rp ' + Number(n).toLocaleString('id-ID');
+}
+
+function insertSignatureIntoCell(cell, url) {
+  cell.clear();
+  const blob = getDriveBlobFromUrl(url);
+  if (blob) {
+    const img = cell.appendImage(blob);
+    img.setWidth(120);
+    img.setHeight(50);
+  } else {
+    cell.appendParagraph('(belum ditandatangani)');
+  }
+}
+
+function styleTableNoBorder(table) {
+  table.setBorderWidth(0);
+}
+
+function boldRow(table, rowIndex) {
+  const row = table.getRow(rowIndex);
+  for (let c = 0; c < row.getNumCells(); c++) {
+    row.getCell(c).editAsText().setBold(true);
+  }
+}
+
+function generateSubmissionPdf(id, session) {
+  const s = findSubmissionById(id);
+  if (!s) throw new Error('Pengajuan tidak ditemukan');
+
+  const allowed = (s.usernameKandidat === session.username) ||
+                  (s.usernameAtasan === session.username) ||
+                  (session.role === 'hcd');
+  if (!allowed) throw new Error('Anda tidak berhak mencetak pengajuan ini');
+
+  const doc = DocumentApp.create('TEMP_PDF_' + id);
+  const body = doc.getBody();
+  body.setMarginTop(36).setMarginBottom(36).setMarginLeft(50).setMarginRight(50);
+
+  const company = body.appendParagraph('PUTRA PERKASA ABADI');
+  company.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  company.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+
+  const title = body.appendParagraph('PERMOHONAN PELATIHAN KARYAWAN');
+  title.editAsText().setBold(true).setUnderline(true);
+  title.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+  body.appendParagraph('');
+
+  const infoTable = body.appendTable([
+    ['Tanggal', ':', s.submittedAt || '-'],
+    ['Departemen', ':', s.departemen || '-'],
+    ['Kategori Pelatihan', ':', s.kategoriPelatihan || '-']
+  ]);
+  styleTableNoBorder(infoTable);
+  body.appendParagraph('');
+
+  const trainTable = body.appendTable([
+    ['Judul Pelatihan', '', ':', s.pelatihan || '-'],
+    ['', 'Tanggal', ':', (s.mulai || '-') + ' s/d ' + (s.selesai || '-')],
+    ['', 'Tempat', ':', s.tempat || '-'],
+    ['', 'Lama Pelatihan', ':', (s.lamaJam || '-') + ' jam'],
+    ['', 'Penyelenggara / Trainer', ':', s.penyelenggara || '-'],
+    ['', 'Biaya', ':', formatRupiahPdf(s.biaya)]
+  ]);
+  body.appendParagraph('');
+
+  const pesertaLabel = body.appendParagraph('Peserta Pelatihan:');
+  pesertaLabel.editAsText().setBold(true);
+  const pesertaTable = body.appendTable([
+    ['No', 'Nama', 'Departemen', 'Jabatan'],
+    ['1', s.nama || '-', s.departemen || '-', s.jabatan || '-']
+  ]);
+  boldRow(pesertaTable, 0);
+  body.appendParagraph('');
+
+  const approvalTable = body.appendTable([
+    ['Dibuat oleh', 'Diperiksa oleh', 'Disetujui Oleh'],
+    ['', '', ''],
+    ['Nama: ' + (s.nama || '-') + '\nDept: ' + (s.departemen || '-'),
+     'Nama: ' + (s.approverUser || '-') + '\nDept: ' + (s.departemen || '-'),
+     'Nama: ' + (s.approverDept || '-') + '\nDept: HCD']
+  ]);
+  boldRow(approvalTable, 0);
+
+  insertSignatureIntoCell(approvalTable.getCell(1, 0), s.signatureKandidat);
+  insertSignatureIntoCell(approvalTable.getCell(1, 1), s.signatureUser);
+  insertSignatureIntoCell(approvalTable.getCell(1, 2), s.signatureDept);
+
+  doc.saveAndClose();
+
+  const pdfBlob = DriveApp.getFileById(doc.getId()).getAs('application/pdf');
+  const safeNama = String(s.nama || 'pengajuan').replace(/[^a-zA-Z0-9]+/g, '_');
+  pdfBlob.setName('Pengajuan_Pelatihan_' + safeNama + '_' + id + '.pdf');
+
+  DriveApp.getFileById(doc.getId()).setTrashed(true);
+  return pdfBlob;
+}
+
+function doGet(e) {
+  const session = getSession(e.parameter.token);
+  if (!session) return jsonOut({ error: 'unauthorized' });
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  const data = sheet.getDataRange().getValues();
+  const all = data.slice(1).filter(r => r[0] !== '').map(row => {
+    const obj = {};
+    HEADERS.forEach((h, i) => obj[h] = row[i]);
+    return obj;
+  });
+
+  const myApplications = all.filter(s => s.usernameKandidat === session.username);
+  const myApprovalsAsUser = all.filter(s => s.usernameAtasan === session.username && s.status === 'pending_user');
+  const hcdApprovals = session.role === 'hcd' ? all.filter(s => s.status === 'pending_dept') : [];
+
+  return jsonOut({
+    username: session.username, nama: session.nama, jabatan: session.jabatan, role: session.role,
+    isHCD: session.role === 'hcd',
+    myApplications, myApprovalsAsUser, hcdApprovals
+  });
+}
+
+function doPost(e) {
+  const body = JSON.parse(e.postData.contents);
+
+  if (body.action === 'login') {
+    const users = getUsersMap();
+    const user = users[String(body.username || '').trim()];
+    if (!user || hashPassword(body.password || '') !== String(user.PasswordHash)) {
+      return jsonOut({ error: 'Username atau password salah' });
+    }
+    const token = Utilities.getUuid();
+    CacheService.getScriptCache().put('sess_' + token, JSON.stringify({
+      username: user.Username, role: user.Role, nama: user.Nama, email: user.Email, jabatan: user.Jabatan || ''
+    }), SESSION_TTL_SECONDS);
+    return jsonOut({ token, role: user.Role, nama: user.Nama, username: user.Username, jabatan: user.Jabatan || '' });
+  }
+
+  if (body.action === 'uploadFile') {
+    const session = getSession(body.token);
+    if (!session) return jsonOut({ error: 'unauthorized' });
+    try {
+      const result = uploadToDrive(body.filename, body.mimeType, body.base64Data);
+      return jsonOut({ success: true, url: result.url, directUrl: result.directUrl });
+    } catch (err) {
+      return jsonOut({ error: 'Gagal upload file: ' + err.message });
+    }
+  }
+
+  if (body.action === 'generatePdf') {
+    const session = getSession(body.token);
+    if (!session) return jsonOut({ error: 'unauthorized' });
+    try {
+      const pdfBlob = generateSubmissionPdf(body.id, session);
+      const base64 = Utilities.base64Encode(pdfBlob.getBytes());
+      return jsonOut({ success: true, base64, filename: pdfBlob.getName() });
+    } catch (err) {
+      return jsonOut({ error: err.message });
+    }
+  }
+
+  const session = getSession(body.token);
+  if (!session) return jsonOut({ error: 'unauthorized' });
+  const users = getUsersMap();
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+
+  if (body.action === 'create') {
+    const me = users[session.username];
+    const payload = Object.assign({}, body.data, {
+      usernameKandidat: session.username,
+      usernameAtasan: me ? me.AtasanUsername : '',
+      jabatan: me ? me.Jabatan : ''
+    });
+    const row = HEADERS.map(h => payload[h] !== undefined ? payload[h] : '');
+    sheet.appendRow(row);
+    notify('new_submission', payload, users);
+    return jsonOut({ success: true });
+  }
+
+  if (body.action === 'update') {
+    const data = sheet.getDataRange().getValues();
+    const idCol = HEADERS.indexOf('id');
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][idCol]) === String(body.id)) {
+        const existing = {};
+        HEADERS.forEach((h, idx) => existing[h] = data[i][idx]);
+
+        const targetStatus = body.data.status;
+        if (targetStatus === 'pending_dept' || targetStatus === 'rejected_user') {
+          if (existing.usernameAtasan !== session.username) return jsonOut({ error: 'forbidden: bukan atasan pengajuan ini' });
+        } else if (targetStatus === 'approved' || targetStatus === 'rejected_dept') {
+          if (session.role !== 'hcd') return jsonOut({ error: 'forbidden: bukan HCD' });
+        } else {
+          return jsonOut({ error: 'forbidden: transisi status tidak dikenali' });
+        }
+
+        HEADERS.forEach((h, colIdx) => {
+          if (body.data[h] !== undefined) sheet.getRange(i + 1, colIdx + 1).setValue(body.data[h]);
+        });
+        const merged = Object.assign({}, existing, body.data);
+        notify(body.notifyType, merged, users);
+        break;
+      }
+    }
+    return jsonOut({ success: true });
+  }
+
+  if (body.action === 'submitMateri') {
+    const data = sheet.getDataRange().getValues();
+    const idCol = HEADERS.indexOf('id');
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][idCol]) === String(body.id)) {
+        const existing = {};
+        HEADERS.forEach((h, idx) => existing[h] = data[i][idx]);
+        if (existing.usernameKandidat !== session.username) return jsonOut({ error: 'forbidden: bukan pemilik pengajuan ini' });
+        if (existing.status !== 'approved') return jsonOut({ error: 'forbidden: pengajuan belum disetujui penuh' });
+
+        HEADERS.forEach((h, colIdx) => {
+          if (body.data[h] !== undefined) sheet.getRange(i + 1, colIdx + 1).setValue(body.data[h]);
+        });
+        break;
+      }
+    }
+    return jsonOut({ success: true });
+  }
+
+  return jsonOut({ error: 'unknown action' });
+}
+
+function notify(type, data, users) {
+  try {
+    const hcdEmails = Object.values(users).filter(u => u.Role === 'hcd').map(u => u.Email).filter(Boolean);
+    const hcdTo = hcdEmails.join(',');
+    const kandidatEmail = users[data.usernameKandidat] ? users[data.usernameKandidat].Email : '';
+    const atasanEmail = users[data.usernameAtasan] ? users[data.usernameAtasan].Email : '';
+
+    if (type === 'new_submission' && atasanEmail) {
+      MailApp.sendEmail({ to: atasanEmail, subject: 'Pengajuan pelatihan baru dari ' + data.nama,
+        body: data.nama + ' (' + data.departemen + ') mengajukan pelatihan "' + data.pelatihan + '".\n\nSilakan buka aplikasi untuk meninjau dan menandatangani.' });
+    } else if (type === 'to_depthead' && hcdTo) {
+      MailApp.sendEmail({ to: hcdTo, subject: 'Menunggu approval HCD: ' + data.nama,
+        body: 'Pengajuan pelatihan "' + data.pelatihan + '" dari ' + data.nama + ' sudah disetujui User dan menunggu approval Anda.' });
+    } else if (type === 'rejected_by_user' && kandidatEmail) {
+      MailApp.sendEmail({ to: kandidatEmail, subject: 'Pengajuan pelatihan Anda ditolak',
+        body: 'Pengajuan pelatihan "' + data.pelatihan + '" ditolak oleh User.\nCatatan: ' + (data.catatanUser || '-') });
+    } else if (type === 'final_approved' && kandidatEmail) {
+      MailApp.sendEmail({ to: kandidatEmail, subject: 'Pengajuan pelatihan Anda disetujui',
+        body: 'Selamat! Pengajuan pelatihan "' + data.pelatihan + '" sudah disetujui penuh.\nCatatan HCD: ' + (data.catatanDept || '-') + '\n\nJangan lupa unggah materi pembelajaran dan bukti pengerjaan proyek lewat aplikasi setelah selesai.' });
+    } else if (type === 'rejected_by_depthead' && kandidatEmail) {
+      MailApp.sendEmail({ to: kandidatEmail, subject: 'Pengajuan pelatihan Anda ditolak',
+        body: 'Pengajuan pelatihan "' + data.pelatihan + '" ditolak oleh Dept. Head (HCD).\nCatatan: ' + (data.catatanDept || '-') });
+    }
+  } catch (err) {}
+}
+
+function generateHashHelper() {
+  Logger.log(hashPassword('passwordContoh'));
+}
